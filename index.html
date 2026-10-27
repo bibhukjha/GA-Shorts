@@ -76,7 +76,7 @@ h4{margin:14px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.5px
 const $=s=>document.querySelector(s);
 const EM={Economy:'💹',Banking:'🏦',National:'🇮🇳',International:'🌍',Science:'🔬',Environment:'🌿',Defence:'🛡️',Sports:'🏏',Awards:'🏆',Appointments:'🧑‍💼',Days:'📅',State:'🗺️',Obituary:'🕊️',Other:'📌'};
 const GR=['#3b4ba8,#6c8cff','#7a3ba8,#c06cff','#0f7a63,#38d39f','#a8573b,#ff9a6c','#3b7aa8,#6cd0ff','#a83b6a,#ff6c9d'];
-const DEF={gemini:'gemini-2.5-flash',anthropic:'claude-sonnet-5-5'};
+const DEF={gemini:'gemini-2.5-flash-lite',anthropic:'claude-sonnet-5-5'};
 /* ---------- storage: IndexedDB (docs + image blobs) ---------- */
 const idb=new Promise((res,rej)=>{const r=indexedDB.open('cashorts',1);r.onupgradeneeded=()=>{r.result.createObjectStore('docs');r.result.createObjectStore('imgs')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const put=(s,k,v)=>idb.then(d=>new Promise((res,rej)=>{const t=d.transaction(s,'readwrite');t.objectStore(s).put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)}));
@@ -214,6 +214,6 @@ $('#del').onclick=async()=>{
   for(const [k,v] of Object.entries(docs))if(v.date==d){for(const c of v.cards)if(c.img)await del('imgs',c.img);await del('docs',k)}
   $('#fd').value='';await load();
 };
-if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+if(navigator.storage&&navigator.storagepersist)navigator.storage.persist();
 load().catch(e=>{$('#feed').innerHTML='<div class="empty">Storage unavailable: '+esc(e.message)+'<br>Turn off Private Browsing.</div>'});
 </script></body></html>
