@@ -137,7 +137,7 @@ $('#ky').onchange=()=>{cfg.ky=$('#ky').value.trim();saveC()};$('#md').onchange=(
 /* ---------- AI ---------- */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function ask(prompt){
-  const pv=cfg.pv||'gemini',model=cfg.md||DEF[pv];if(!cfg.ky)throw new Error('Add your API key in AI settings');
+  const pv=cfg.pv||'gemini';let model=cfg.md||DEF[pv];if(!cfg.ky)throw new Error('Add your API key in AI settings');
   for(let a=0;a<4;a++){
     let r,txt;
     if(pv=='gemini'){
@@ -146,7 +146,12 @@ async function ask(prompt){
       r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':cfg.ky,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:8000,messages:[{role:'user',content:prompt}]})});
     }
     if(r.status==429||r.status==503){log('  waiting (rate limit)…',1);await sleep(9000*(a+1));continue}
-    const j=await r.json();if(!r.ok)throw new Error((j.error&&(j.error.message||j.error))||r.status);
+    const j=await r.json();
+    if(!r.ok){const msg=(j.error&&(j.error.message||j.error))||String(r.status);
+      /* Google retires models: if the error names a replacement, switch to it, remember it, and retry */
+      const m=pv=='gemini'&&String(msg).match(/use (?:models\/)?(gemini-[\w.-]+)/i);
+      if(m&&m[1]!==model){log('  model '+model+' retired, switching to '+m[1],1);model=m[1];cfg.md=model;saveC();$('#md').value=model;a--;continue}
+      throw new Error(msg)}
     txt=pv=='gemini'?j.candidates[0].content.parts.map(p=>p.text||'').join(''):j.content.map(p=>p.text||'').join('');
     const s=txt.indexOf('['),e=txt.lastIndexOf(']');return JSON.parse(txt.slice(s,e+1));
   }
